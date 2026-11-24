@@ -60,10 +60,8 @@
     u.searchParams.set('scope', 'openid email profile');
     u.searchParams.set('prompt', 'select_account');
     u.searchParams.set('state', estado);
-    if (huella) {
-      u.searchParams.set('code_challenge', huella);
-      u.searchParams.set('code_challenge_method', 'S256');
-    }
+    u.searchParams.set('code_challenge', huella);
+    u.searchParams.set('code_challenge_method', 'S256');
     return u.toString();
   }
 
@@ -116,8 +114,9 @@
     if (m.tipo === 'trazos-listo') {
       ocultarBienvenida();
     } else if (m.tipo === 'trazos-login' && typeof m.state === 'string' && /^[0-9a-f]{32}$/.test(m.state)) {
-      // La huella es opcional solo para el panel anterior a PKCE; si viene, tiene que ser una huella S256.
-      if (m.challenge !== undefined && !(typeof m.challenge === 'string' && /^[A-Za-z0-9_-]{43}$/.test(m.challenge))) return;
+      // Huella PKCE obligatoria (desde 2026-11-24, con el panel @127 publicado y probado): sin ella no se
+      // pide código a Google, así un código nunca sirve sin el secreto que quedó en el panel.
+      if (!(typeof m.challenge === 'string' && /^[A-Za-z0-9_-]{43}$/.test(m.challenge))) return;
       window.location.href = urlLoginGoogle(m.state, m.challenge);
     } else if (m.tipo === 'trazos-recargar') {
       window.location.replace(BASE);
