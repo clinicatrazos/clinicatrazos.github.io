@@ -8,7 +8,7 @@
  *
  * Al cambiar cualquier archivo del cascarón, subir VERSION para que los celulares tomen el nuevo.
  */
-var VERSION = 'trazos-app-v2';
+var VERSION = 'trazos-app-v3';
 var ARCHIVOS = [
   './',
   './index.html',

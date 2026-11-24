@@ -50,8 +50,9 @@
     return destino.toString();
   }
 
-  /** Dirección del login de Google, armada acá con valores fijos. Del panel solo viene el state. */
-  function urlLoginGoogle(estado) {
+  /** Dirección del login de Google, armada acá con valores fijos. Del panel solo vienen el state y la
+   *  huella PKCE (code_challenge, 2026-11-24); el secreto nunca pasa por el cascarón. */
+  function urlLoginGoogle(estado, huella) {
     var u = new URL('https://accounts.google.com/o/oauth2/v2/auth');
     u.searchParams.set('client_id', CLIENTE_GOOGLE);
     u.searchParams.set('redirect_uri', BASE);
@@ -59,6 +60,10 @@
     u.searchParams.set('scope', 'openid email profile');
     u.searchParams.set('prompt', 'select_account');
     u.searchParams.set('state', estado);
+    if (huella) {
+      u.searchParams.set('code_challenge', huella);
+      u.searchParams.set('code_challenge_method', 'S256');
+    }
     return u.toString();
   }
 
@@ -111,7 +116,9 @@
     if (m.tipo === 'trazos-listo') {
       ocultarBienvenida();
     } else if (m.tipo === 'trazos-login' && typeof m.state === 'string' && /^[0-9a-f]{32}$/.test(m.state)) {
-      window.location.href = urlLoginGoogle(m.state);
+      // La huella es opcional solo para el panel anterior a PKCE; si viene, tiene que ser una huella S256.
+      if (m.challenge !== undefined && !(typeof m.challenge === 'string' && /^[A-Za-z0-9_-]{43}$/.test(m.challenge))) return;
+      window.location.href = urlLoginGoogle(m.state, m.challenge);
     } else if (m.tipo === 'trazos-recargar') {
       window.location.replace(BASE);
     }
