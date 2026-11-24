@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Solo carga archivos propios y el panel de script.google.com. Nada de terceros. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; frame-src https://script.google.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin">
+<title>Trazos</title>
+<meta name="description" content="Espacio de trabajo de Clínica Trazos">
+<meta name="theme-color" content="#FBF6EF">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Trazos">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="iconos/favicon-32.png">
+<link rel="apple-touch-icon" href="iconos/apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<main class="pantalla" id="bienvenida" aria-busy="true">
+  <div class="centro">
+    <img class="logo" src="iconos/cerebro.png" alt="Logo de Clínica Trazos" width="168" height="147">
+    <div class="marca">
+      <span class="nombre">Trazos</span>
+      <span class="sub">Clínica Trazos · Rivera</span>
+    </div>
+  </div>
+  <div class="pie" role="status" aria-live="polite">
+    <div class="barra" aria-hidden="true"><div></div></div>
+    <span id="bienvenida-texto">Abriendo tu espacio de trabajo…</span>
+  </div>
+</main>
+
+<main class="pantalla" id="sin-conexion" hidden>
+  <div class="centro">
+    <img class="logo chico" src="iconos/cerebro.png" alt="" width="112" height="98">
+    <div class="marca">
+      <span class="nombre chico">Sin conexión</span>
+      <span class="sub">Trazos necesita internet para mostrar la agenda y las fichas. Revisá el wifi o los datos del celular.</span>
+    </div>
+    <button type="button" class="boton" id="reintentar">Reintentar</button>
+  </div>
+</main>
+
+<iframe id="app" title="Trazos" allow="clipboard-write" referrerpolicy="strict-origin"></iframe>
+<script src="app.js"></script>
+</body>
+</html>

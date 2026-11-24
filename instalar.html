@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin">
+<title>Instalar Trazos en el celular</title>
+<meta name="theme-color" content="#FBF6EF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Trazos">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="iconos/favicon-32.png">
+<link rel="apple-touch-icon" href="iconos/apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body class="instalar">
+<main class="hoja">
+  <header>
+    <img src="iconos/icono-192.png" alt="Ícono de la app Trazos" width="72" height="72">
+    <div>
+      <h1>Instalá Trazos en tu celular</h1>
+      <p>Se hace una sola vez. Después la abrís desde el ícono, como cualquier app.</p>
+    </div>
+  </header>
+
+  <section id="android">
+    <h2>Android (Chrome)</h2>
+    <button type="button" class="boton" id="instalar-ya" hidden>Instalar Trazos</button>
+    <ol>
+      <li>Abrí <a href="./">esta dirección</a> en <b>Chrome</b>.</li>
+      <li>Tocá el menú <b>⋮</b> (arriba a la derecha).</li>
+      <li>Elegí <b>Instalar app</b> (o <b>Agregar a la pantalla principal</b>) y confirmá.</li>
+    </ol>
+  </section>
+
+  <section id="iphone">
+    <h2>iPhone (Safari o Chrome)</h2>
+    <ol>
+      <li>Abrí <a href="./">esta dirección</a> en <b>Safari</b> o en <b>Chrome</b>.</li>
+      <li>Tocá el botón <b>Compartir</b> (el cuadrado con una flecha hacia arriba). En Chrome está junto a la barra de dirección.</li>
+      <li>Bajá y elegí <b>Agregar a pantalla de inicio</b>.</li>
+      <li>Dejá el nombre <b>Trazos</b> y tocá <b>Agregar</b>.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Para que funcione bien</h2>
+    <p class="nota">Instalala desde <b>Chrome</b> o <b>Safari</b>: con Firefox la app no abre.</p>
+    <p class="nota">Entrá con la cuenta de Google que la clínica te dio de alta. Si en el celular tenés varias cuentas de Google abiertas, elegí la correcta cuando te lo pregunte. Por seguridad, la sesión se cierra sola después de un rato sin uso; para volver a entrar usás la misma cuenta.</p>
+  </section>
+</main>
+<script src="instalar.js"></script>
+</body>
+</html>

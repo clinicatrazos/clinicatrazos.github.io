@@ -1,0 +1,33 @@
+{
+  "id": "/",
+  "name": "Trazos",
+  "short_name": "Trazos",
+  "description": "Espacio de trabajo de Clínica Trazos",
+  "lang": "es-UY",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FBF6EF",
+  "theme_color": "#FBF6EF",
+  "icons": [
+    {
+      "src": "iconos/icono-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "iconos/icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "iconos/icono-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
