@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Solo carga archivos propios y el panel de script.google.com. Nada de terceros. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; frame-src https://script.google.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<!-- Solo carga archivos propios y el panel de script.google.com. Nada de terceros. Firebase (avisos al celular)
+     está alojado acá en firebase/ y solo se conecta a los dos servicios de registro de Google. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://firebaseinstallations.googleapis.com https://fcmregistrations.googleapis.com; frame-src https://script.google.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin">
 <title>Trazos</title>
 <meta name="description" content="Espacio de trabajo de Clínica Trazos">
@@ -45,6 +46,18 @@
 </main>
 
 <iframe id="app" title="Trazos" allow="clipboard-write" referrerpolicy="strict-origin"></iframe>
+
+<!-- Avisos al celular (2026-11-25): el permiso se pide acá, en la cáscara, no dentro del panel. -->
+<aside class="avisos" id="avisos" hidden role="dialog" aria-labelledby="avisos-titulo">
+  <p id="avisos-titulo"><b>¿Querés recibir avisos de tu agenda?</b><span>Recuperaciones, evaluaciones y el recordatorio del día siguiente.</span></p>
+  <div class="avisos-botones">
+    <button type="button" class="boton chico secundario" id="avisos-no">Ahora no</button>
+    <button type="button" class="boton chico" id="avisos-si">Activar avisos</button>
+  </div>
+</aside>
+
+<script src="firebase/firebase-app-compat.js"></script>
+<script src="firebase/firebase-messaging-compat.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

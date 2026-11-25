@@ -1,0 +1,6 @@
+SDK oficial de Firebase 12.6.0 (compat), descargado el 2026-11-25 de https://www.gstatic.com/firebasejs/12.6.0/
+Se aloja acá para no cargar código de terceros en cada uso (la CSP solo permite 'self').
+SHA-256:
+805d7d1adabaf2583ebe716d3075c26dd9ad1234b05b248afd8e411a5d8b7e5e  firebase-app-compat.js
+c914d60dc1bb835a61e3e8cecbcceda8787cece06fbc60591233913db08f162a  firebase-messaging-compat.js
+Solo se conecta a firebaseinstallations.googleapis.com y fcmregistrations.googleapis.com.

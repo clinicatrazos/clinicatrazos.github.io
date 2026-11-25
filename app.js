@@ -15,6 +15,11 @@
  *    primer aviso del panel (los marcos de Google para nuestro script); cualquier otro se ignora.
  *  - La dirección del login de Google la arma acá con valores fijos; del panel solo toma el state.
  *  - No guarda ni ve el token de sesión: lo maneja el panel.
+ *
+ * Avisos al celular (2026-11-25): el permiso de notificaciones SOLO se puede pedir desde esta página (no desde
+ * el panel, que está en un marco de Google). Cuando el panel avisa que hay sesión, se ofrece «Activar avisos»;
+ * con el permiso, Firebase da el token del teléfono y se le pasa al panel (a la ventana y origen que ya se
+ * fijaron), que lo registra en el servidor con la sesión. El token no sirve para leer nada: solo para recibir.
  */
 (function () {
   'use strict';
@@ -33,6 +38,15 @@
   var listo = false;
   var respaldo = null;
   var origenPanel = null; // se fija con el primer mensaje válido y no cambia más
+  var ventanaPanel = null; // la ventana del panel que mandó ese mensaje (para contestarle los avisos)
+  var FIREBASE = {
+    apiKey: 'AIzaSyCVQb09pfYuvLJ8yMlm3EX_DKhqpI5RHhA', authDomain: 'clinica-trazos.firebaseapp.com',
+    projectId: 'clinica-trazos', storageBucket: 'clinica-trazos.firebasestorage.app',
+    messagingSenderId: '431160097117', appId: '1:431160097117:web:0cc0b09c9fc2d148a150b4'
+  };
+  var VAPID = 'BGIq7mgV3A7Ae0mHFjf4JRD4ui307y-4ZSICUpT2NueVOfSF1MfiEmwrcAHmfpv95J2ZfY4jSFy_DPaEO3JTAy4';
+  var AVISOS_NO = 'trazos-avisos-no'; // cuándo dijo «Ahora no» (se vuelve a ofrecer a los 7 días)
+  var avisos = document.getElementById('avisos');
 
   /** Dirección del panel: ?pwa=1 y, si Google acaba de volver, su código y state. */
   function urlDelPanel() {
@@ -107,11 +121,50 @@
     return true;
   }
 
+  /* ---------- Avisos al celular ---------- */
+  function avisosSoportados() {
+    return 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window && !!window.firebase;
+  }
+  /** Saca el token del teléfono y se lo pasa al panel (solo a la ventana y origen ya fijados). */
+  function enviarTokenAlPanel() {
+    if (!avisosSoportados() || Notification.permission !== 'granted' || !ventanaPanel || !origenPanel) return;
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(FIREBASE);
+      navigator.serviceWorker.ready.then(function (reg) {
+        return firebase.messaging().getToken({ vapidKey: VAPID, serviceWorkerRegistration: reg });
+      }).then(function (token) {
+        if (token && ventanaPanel) ventanaPanel.postMessage({ tipo: 'trazos-push', token: token }, origenPanel);
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  function ofrecerAvisos() {
+    if (!avisosSoportados()) return;
+    if (Notification.permission === 'granted') { enviarTokenAlPanel(); return; }
+    if (Notification.permission !== 'default') return;
+    var dijoNo = 0;
+    try { dijoNo = Number(localStorage.getItem(AVISOS_NO) || 0); } catch (e) {}
+    if (Date.now() - dijoNo < 7 * 24 * 3600 * 1000) return;
+    avisos.hidden = false;
+  }
+  document.getElementById('avisos-si').addEventListener('click', function () {
+    avisos.hidden = true;
+    // Este toque es el que habilita el pedido de permiso (Apple lo exige).
+    Notification.requestPermission().then(function (p) { if (p === 'granted') enviarTokenAlPanel(); }).catch(function () {});
+  });
+  document.getElementById('avisos-no').addEventListener('click', function () {
+    avisos.hidden = true;
+    try { localStorage.setItem(AVISOS_NO, String(Date.now())); } catch (e) {}
+  });
+
   window.addEventListener('message', function (ev) {
     if (!vieneDelMarco(ev.source) || !origenAceptado(ev.origin)) return;
     var m = ev.data;
     if (!m || typeof m !== 'object' || typeof m.tipo !== 'string') return;
-    if (m.tipo === 'trazos-listo') {
+    if (!ventanaPanel) ventanaPanel = ev.source;
+    if (m.tipo === 'trazos-sesion') {
+      // El panel avisa que hay una sesión abierta: recién ahí se ofrecen los avisos.
+      if (m.activa === true) ofrecerAvisos(); else avisos.hidden = true;
+    } else if (m.tipo === 'trazos-listo') {
       ocultarBienvenida();
     } else if (m.tipo === 'trazos-login' && typeof m.state === 'string' && /^[0-9a-f]{32}$/.test(m.state)) {
       // Huella PKCE obligatoria (desde 2026-11-24, con el panel @127 publicado y probado): sin ella no se

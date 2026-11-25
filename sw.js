@@ -4,11 +4,12 @@
  *  2. Guarda los archivos del cascarón para que, sin internet, se vea la pantalla "Sin conexión" en
  *     vez de un error del navegador.
  * Solo toca archivos de su propia carpeta. El panel (script.google.com) y Google nunca pasan por acá:
- * ningún dato de pacientes se guarda en el celular.
+ * ningún dato de pacientes se guarda en el celular (los avisos se muestran y no se guardan).
+ *  3. Recibe los avisos al celular (Firebase Cloud Messaging, ver más abajo).
  *
  * Al cambiar cualquier archivo del cascarón, subir VERSION para que los celulares tomen el nuevo.
  */
-var VERSION = 'trazos-app-v4';
+var VERSION = 'trazos-app-v6';
 var ARCHIVOS = [
   './',
   './index.html',
@@ -25,8 +26,40 @@ var ARCHIVOS = [
   './iconos/favicon-32.png',
   './fuentes/poppins-400.woff2',
   './fuentes/poppins-600.woff2',
-  './fuentes/poppins-700.woff2'
+  './fuentes/poppins-700.woff2',
+  './firebase/firebase-app-compat.js',
+  './firebase/firebase-messaging-compat.js'
 ];
+
+// Avisos al celular (2026-11-25). El servidor manda mensajes SOLO de datos ({titulo, cuerpo}) y este service
+// worker los muestra SIEMPRE en su evento push, con la app abierta o cerrada: iPhone corta los avisos si un
+// push llega y no se ve nada. Firebase (alojado acá) solo hace falta para el registro del teléfono.
+self.addEventListener('push', function (ev) {
+  var d = {}, j = {};
+  try { j = ev.data ? ev.data.json() : {}; d = (j && j.data) || {}; } catch (e) {}
+  // Un aviso con «notification» (p. ej. una prueba desde la consola de Firebase) lo muestra Firebase: acá no,
+  // para no duplicar.
+  if (j && j.notification) return;
+  var titulo = String(d.titulo || 'Trazos').slice(0, 80);
+  var cuerpo = String(d.cuerpo || 'Tenés una novedad en tu agenda.').slice(0, 240);
+  ev.waitUntil(self.registration.showNotification(titulo, { body: cuerpo, icon: 'iconos/icono-192.png', badge: 'iconos/icono-192.png' }));
+});
+// Al tocar el aviso: vuelve a la app si está abierta, si no la abre (siempre la dirección propia).
+self.addEventListener('notificationclick', function (ev) {
+  ev.notification.close();
+  var base = new URL('./', self.registration.scope).href;
+  ev.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (lista) {
+    for (var i = 0; i < lista.length; i++) if (lista[i].url.indexOf(base) === 0 && 'focus' in lista[i]) return lista[i].focus();
+    return self.clients.openWindow(base);
+  }));
+});
+importScripts('firebase/firebase-app-compat.js', 'firebase/firebase-messaging-compat.js');
+firebase.initializeApp({
+  apiKey: 'AIzaSyCVQb09pfYuvLJ8yMlm3EX_DKhqpI5RHhA', authDomain: 'clinica-trazos.firebaseapp.com',
+  projectId: 'clinica-trazos', storageBucket: 'clinica-trazos.firebasestorage.app',
+  messagingSenderId: '431160097117', appId: '1:431160097117:web:0cc0b09c9fc2d148a150b4'
+});
+firebase.messaging();
 
 self.addEventListener('install', function (ev) {
   ev.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(ARCHIVOS); }).then(function () { return self.skipWaiting(); }));

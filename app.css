@@ -64,3 +64,17 @@ body.instalar { overflow: auto; }
 .instalar .nota { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
 .instalar a { color: var(--primary-dark); }
 .instalar .nota + .nota { margin-top: 10px; }
+
+/* Avisos al celular (2026-11-25) */
+.avisos {
+  position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 20;
+  max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 1px solid var(--border); border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(46, 43, 21, 0.18); padding: 16px; display: grid; gap: 12px;
+}
+.avisos[hidden] { display: none; }
+.avisos p { margin: 0; display: grid; gap: 4px; font-size: 15px; }
+.avisos p span { font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
+.avisos-botones { display: flex; justify-content: flex-end; gap: 8px; }
+.boton.chico { min-height: 44px; padding: 0 16px; font-size: 14px; }
+.boton.secundario { background: transparent; color: var(--primary-dark); border: 1px solid var(--border); }
+.boton.secundario:hover { background: var(--paper); }
