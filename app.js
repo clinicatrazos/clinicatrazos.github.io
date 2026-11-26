@@ -70,7 +70,7 @@
   function diagnostico(g, razon) {
     var d = {};
     try { d = JSON.parse(localStorage.getItem(DIAG) || '{}'); } catch (e) {}
-    return 'app v9 · ' + razon + ' · guardada ' + hace(d.guardada) + (d.borrada ? ' · borrada ' + hace(d.borrada) + ' (' + (d.motivo || '?') + ')' : '');
+    return 'app v10 · ' + razon + ' · guardada ' + hace(d.guardada) + (d.borrada ? ' · borrada ' + hace(d.borrada) + ' (' + (d.motivo || '?') + ')' : '');
   }
   function borrarSesion(motivo) { try { localStorage.removeItem(SESION); } catch (e) {} anotar('borrada', Date.now()); anotar('motivo', motivo || '?'); }
   /**
@@ -195,7 +195,7 @@
     if (!ventanaPanel) ventanaPanel = ev.source;
     if (m.tipo === 'trazos-sesion') {
       // El panel avisa que hay una sesión abierta: recién ahí se ofrecen los avisos. Cerrada: se olvida.
-      if (m.activa === true) ofrecerAvisos(); else { avisos.hidden = true; if (esDeEstePanel(leerSesion()) || !leerSesion()) borrarSesion('cierre de sesión o sesión vencida'); }
+      if (m.activa === true) ofrecerAvisos(); else { avisos.hidden = true; if (esDeEstePanel(leerSesion()) || !leerSesion()) borrarSesion(typeof m.motivo === 'string' && m.motivo ? m.motivo.slice(0, 80) : 'cierre de sesión o sesión vencida'); }
     } else if (m.tipo === 'trazos-guardar' && typeof m.token === 'string' && RE_TOKEN_SESION.test(m.token)) {
       try { localStorage.setItem(SESION, JSON.stringify({ token: m.token, actividad: typeof m.actividad === 'number' ? m.actividad : Date.now(), origen: origenPanel })); anotar('guardada', Date.now()); } catch (e) { anotar('motivo', 'no se pudo guardar'); }
     } else if (m.tipo === 'trazos-actividad' && typeof m.t === 'number') {
