@@ -61,7 +61,18 @@
   function leerSesion() {
     try { var s = JSON.parse(localStorage.getItem(SESION) || 'null'); return s && RE_TOKEN_SESION.test(s.token) && typeof s.actividad === 'number' ? s : null; } catch (e) { return null; }
   }
-  function borrarSesion() { try { localStorage.removeItem(SESION); } catch (e) {} }
+  // Diagnóstico (sin datos privados): cuándo se guardó y cuándo y por qué se borró la sesión.
+  var DIAG = 'trazos-sesion-diag';
+  function anotar(campo, valor) {
+    try { var d = JSON.parse(localStorage.getItem(DIAG) || '{}'); d[campo] = valor; localStorage.setItem(DIAG, JSON.stringify(d)); } catch (e) {}
+  }
+  function hace(t) { if (!t) return 'nunca'; var m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'recién' : (m < 120 ? 'hace ' + m + ' min' : 'hace ' + Math.round(m / 60) + ' h'); }
+  function diagnostico(g, razon) {
+    var d = {};
+    try { d = JSON.parse(localStorage.getItem(DIAG) || '{}'); } catch (e) {}
+    return 'app v9 · ' + razon + ' · guardada ' + hace(d.guardada) + (d.borrada ? ' · borrada ' + hace(d.borrada) + ' (' + (d.motivo || '?') + ')' : '');
+  }
+  function borrarSesion(motivo) { try { localStorage.removeItem(SESION); } catch (e) {} anotar('borrada', Date.now()); anotar('motivo', motivo || '?'); }
   /**
    * La parte estable del origen de Google del panel: n-<huella>-…-script.googleusercontent.com. Google puede
    * cambiar el resto entre publicaciones; la huella identifica al script (2ª revisión).
@@ -184,18 +195,19 @@
     if (!ventanaPanel) ventanaPanel = ev.source;
     if (m.tipo === 'trazos-sesion') {
       // El panel avisa que hay una sesión abierta: recién ahí se ofrecen los avisos. Cerrada: se olvida.
-      if (m.activa === true) ofrecerAvisos(); else { avisos.hidden = true; if (esDeEstePanel(leerSesion()) || !leerSesion()) borrarSesion(); }
+      if (m.activa === true) ofrecerAvisos(); else { avisos.hidden = true; if (esDeEstePanel(leerSesion()) || !leerSesion()) borrarSesion('cierre de sesión o sesión vencida'); }
     } else if (m.tipo === 'trazos-guardar' && typeof m.token === 'string' && RE_TOKEN_SESION.test(m.token)) {
-      try { localStorage.setItem(SESION, JSON.stringify({ token: m.token, actividad: typeof m.actividad === 'number' ? m.actividad : Date.now(), origen: origenPanel })); } catch (e) {}
+      try { localStorage.setItem(SESION, JSON.stringify({ token: m.token, actividad: typeof m.actividad === 'number' ? m.actividad : Date.now(), origen: origenPanel })); anotar('guardada', Date.now()); } catch (e) { anotar('motivo', 'no se pudo guardar'); }
     } else if (m.tipo === 'trazos-actividad' && typeof m.t === 'number') {
       var s = leerSesion();
       if (esDeEstePanel(s)) { s.actividad = Math.max(s.actividad, m.t); try { localStorage.setItem(SESION, JSON.stringify(s)); } catch (e) {} }
     } else if (m.tipo === 'trazos-pedir-sesion') {
       if (ev.source !== ventanaPanel) return; // solo a la ventana del panel fijada
       var g = leerSesion();
+      var razon = g ? 'tenía sesión' : 'no tenía sesión';
       // Solo al mismo script de Google que la guardó (otra app de Apps Script dentro del marco no la recibe).
-      if (!esDeEstePanel(g)) g = null;
-      ventanaPanel.postMessage({ tipo: 'trazos-sesion-guardada', token: g ? g.token : null, actividad: g ? g.actividad : null }, origenPanel);
+      if (g && !esDeEstePanel(g)) { g = null; razon = 'sesión de otro origen'; }
+      ventanaPanel.postMessage({ tipo: 'trazos-sesion-guardada', token: g ? g.token : null, actividad: g ? g.actividad : null, diag: diagnostico(g, razon) }, origenPanel);
     } else if (m.tipo === 'trazos-listo') {
       ocultarBienvenida();
     } else if (m.tipo === 'trazos-login' && typeof m.state === 'string' && /^[0-9a-f]{32}$/.test(m.state)) {
