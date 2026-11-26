@@ -14,7 +14,14 @@
  *  - Solo acepta mensajes que vengan de adentro de SU marco y de UN solo origen de Google: el del
  *    primer aviso del panel (los marcos de Google para nuestro script); cualquier otro se ignora.
  *  - La dirección del login de Google la arma acá con valores fijos; del panel solo toma el state.
- *  - No guarda ni ve el token de sesión: lo maneja el panel.
+ *  - Guarda la sesión del panel (2026-11-25), porque en iPhone lo que guarda el panel se borra al cerrar la app:
+ *    localStorage 'trazos-sesion-panel' = {token, actividad, origen}. Solo se la devuelve al MISMO origen de
+ *    Google que se la dio, a la ventana del panel fijada. Se borra al cerrar sesión, por inactividad, si el
+ *    servidor la da por vencida o revocada y al empezar otro login. El cierre por 60 min sin uso lo controla el
+ *    panel con la «actividad» guardada acá.
+ *    IMPORTANTE: en clinicatrazos.github.io no puede correr nada más. NUNCA crear otro repositorio con Pages en la
+ *    organización clinicatrazos (sería el mismo origen y podría leer la sesión). Firebase está alojado acá con su
+ *    huella SHA-256 en firebase/LEEME.txt.
  *
  * Avisos al celular (2026-11-25): el permiso de notificaciones SOLO se puede pedir desde esta página (no desde
  * el panel, que está en un marco de Google). Cuando el panel avisa que hay sesión, se ofrece «Activar avisos»;
@@ -47,6 +54,20 @@
   var VAPID = 'BGIq7mgV3A7Ae0mHFjf4JRD4ui307y-4ZSICUpT2NueVOfSF1MfiEmwrcAHmfpv95J2ZfY4jSFy_DPaEO3JTAy4';
   var AVISOS_NO = 'trazos-avisos-no'; // cuándo dijo «Ahora no» (se vuelve a ofrecer a los 7 días)
   var avisos = document.getElementById('avisos');
+  // Sesión del panel guardada acá (2026-11-25): en iPhone, al cerrar la app se borra lo que guarda el panel
+  // (marco de Google = «otro sitio»); lo de este sitio se conserva. Solo se le devuelve al panel fijado.
+  var SESION = 'trazos-sesion-panel';
+  var RE_TOKEN_SESION = /^[A-Za-z0-9_\-]{10,2048}\.[A-Za-z0-9_\-]{10,256}$/;
+  function leerSesion() {
+    try { var s = JSON.parse(localStorage.getItem(SESION) || 'null'); return s && RE_TOKEN_SESION.test(s.token) && typeof s.actividad === 'number' ? s : null; } catch (e) { return null; }
+  }
+  function borrarSesion() { try { localStorage.removeItem(SESION); } catch (e) {} }
+  /**
+   * La parte estable del origen de Google del panel: n-<huella>-…-script.googleusercontent.com. Google puede
+   * cambiar el resto entre publicaciones; la huella identifica al script (2ª revisión).
+   */
+  function claveOrigen(o) { var m = /^https:\/\/n-([a-z0-9]+)-/.exec(o || ''); return m ? m[1] : null; }
+  function esDeEstePanel(s) { return !!(s && claveOrigen(s.origen) && claveOrigen(s.origen) === claveOrigen(origenPanel)); }
 
   /** Dirección del panel: ?pwa=1 y, si Google acaba de volver, su código y state. */
   function urlDelPanel() {
@@ -162,8 +183,19 @@
     if (!m || typeof m !== 'object' || typeof m.tipo !== 'string') return;
     if (!ventanaPanel) ventanaPanel = ev.source;
     if (m.tipo === 'trazos-sesion') {
-      // El panel avisa que hay una sesión abierta: recién ahí se ofrecen los avisos.
-      if (m.activa === true) ofrecerAvisos(); else avisos.hidden = true;
+      // El panel avisa que hay una sesión abierta: recién ahí se ofrecen los avisos. Cerrada: se olvida.
+      if (m.activa === true) ofrecerAvisos(); else { avisos.hidden = true; if (esDeEstePanel(leerSesion()) || !leerSesion()) borrarSesion(); }
+    } else if (m.tipo === 'trazos-guardar' && typeof m.token === 'string' && RE_TOKEN_SESION.test(m.token)) {
+      try { localStorage.setItem(SESION, JSON.stringify({ token: m.token, actividad: typeof m.actividad === 'number' ? m.actividad : Date.now(), origen: origenPanel })); } catch (e) {}
+    } else if (m.tipo === 'trazos-actividad' && typeof m.t === 'number') {
+      var s = leerSesion();
+      if (esDeEstePanel(s)) { s.actividad = Math.max(s.actividad, m.t); try { localStorage.setItem(SESION, JSON.stringify(s)); } catch (e) {} }
+    } else if (m.tipo === 'trazos-pedir-sesion') {
+      if (ev.source !== ventanaPanel) return; // solo a la ventana del panel fijada
+      var g = leerSesion();
+      // Solo al mismo script de Google que la guardó (otra app de Apps Script dentro del marco no la recibe).
+      if (!esDeEstePanel(g)) g = null;
+      ventanaPanel.postMessage({ tipo: 'trazos-sesion-guardada', token: g ? g.token : null, actividad: g ? g.actividad : null }, origenPanel);
     } else if (m.tipo === 'trazos-listo') {
       ocultarBienvenida();
     } else if (m.tipo === 'trazos-login' && typeof m.state === 'string' && /^[0-9a-f]{32}$/.test(m.state)) {
